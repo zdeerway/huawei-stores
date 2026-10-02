@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>附近华为门店</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;
+         background:#f5f6f8; color:#222; }
+  .header { background:linear-gradient(135deg,#c7000b,#e64444); color:#fff; padding:28px 18px 22px; }
+  .header h1 { font-size:20px; font-weight:600; }
+  .header p { font-size:13px; opacity:.85; margin-top:6px; }
+  .bar { position:sticky; top:0; z-index:9; background:#fff; padding:10px 14px;
+         display:flex; align-items:center; gap:10px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .bar .status { flex:1; font-size:13px; color:#888; }
+  .bar button { border:none; background:#c7000b; color:#fff; font-size:13px;
+                padding:7px 14px; border-radius:16px; }
+  .bar button:active { opacity:.8; }
+  .list { padding:12px 14px 30px; }
+  .card { background:#fff; border-radius:12px; padding:16px 16px 14px; margin-bottom:12px;
+          box-shadow:0 1px 4px rgba(0,0,0,.05); }
+  .card .top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .card h2 { font-size:16px; font-weight:600; line-height:1.4; flex:1; }
+  .dist { flex-shrink:0; background:#fdeeee; color:#c7000b; font-size:12px;
+          padding:3px 10px; border-radius:12px; white-space:nowrap; }
+  .row { display:flex; align-items:flex-start; gap:8px; margin-top:10px; font-size:14px; color:#555; line-height:1.5; }
+  .row .ico { flex-shrink:0; width:16px; text-align:center; }
+  .row .val { flex:1; }
+  .phone { display:inline-flex; align-items:center; gap:6px; color:#c7000b; text-decoration:none; font-weight:500; }
+  .call { margin-top:12px; display:block; text-align:center; background:#c7000b; color:#fff;
+          text-decoration:none; font-size:14px; padding:10px 0; border-radius:8px; }
+  .call:active { opacity:.85; }
+  .tip { text-align:center; color:#999; font-size:12px; padding:18px 20px 0; line-height:1.7; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>附近华为门店</h1>
+  <p>授权门店 · 上海全城 30 家 · 按距离智能排序</p>
+</div>
+<div class="bar">
+  <span class="status" id="status">正在获取您的位置…</span>
+  <button id="relocate">重新定位</button>
+</div>
+<div class="list" id="list"></div>
+<div class="tip">电话点击即可拨打 · 距离为直线距离，仅供参考<br>门店营业时间：10:00 - 22:00</div>
+
+<script>
+var STORES = [{"name": "瑞虹天地太阳宫MSC华为店", "addr": "上海市虹口区瑞虹路181号1层108室", "phone": "18616699353", "lat": 31.26479, "lng": 121.49615}, {"name": "华为臻选店·上海环贸iapm", "addr": "上海市徐汇区淮海中路999号上海环贸广场LG1-161室", "phone": "13062666711", "lat": 31.21757, "lng": 121.45339}, {"name": "大宁国际华为MSC授权店", "addr": "上海市静安区共和新路1988号大宁国际商业广场10座103", "phone": "17721123113", "lat": 31.27571, "lng": 121.44765}, {"name": "张庙街道华为合作店", "addr": "上海市宝山区呼玛路688-1号红太阳商业广场", "phone": "18616532396", "lat": 31.33895, "lng": 121.44123}, {"name": "宝山U天地华为授权体验店", "addr": "上海市宝山区美健路829弄11号1F", "phone": "13621697222", "lat": 31.409, "lng": 121.351}, {"name": "虹口今雨荟华为店", "addr": "上海市虹口区广粤路299号今雨荟一层103室", "phone": "13661675518", "lat": 31.2965, "lng": 121.4655}, {"name": "光新华为合作店", "addr": "上海市普陀区中山北路1855号1F-L1048", "phone": "13817999520", "lat": 31.2455, "lng": 121.438}, {"name": "铜川路华为合作店", "addr": "上海市普陀区铜川路1688号华润万家1F", "phone": "13524378666", "lat": 31.2545, "lng": 121.392}, {"name": "新邻天地华为合作店", "addr": "上海市普陀区武威路1285号新邻天地1-125", "phone": "17301752706", "lat": 31.285, "lng": 121.356}, {"name": "金鑫生活广场华为合作店", "addr": "上海市青浦区华新镇凤阁路118号金鑫生活广场1F-102", "phone": "13818848483", "lat": 31.235, "lng": 121.223}, {"name": "青浦西郊乐缤纷华为综合店", "addr": "上海市青浦区新府中路1399弄91-92号", "phone": "13020218000", "lat": 31.2365, "lng": 121.2265}, {"name": "江湾里Meet678华为体验店", "addr": "上海市杨浦区民府路678号江湾里T1栋1楼", "phone": "15855448663", "lat": 31.327, "lng": 121.509}, {"name": "杨浦国华广场华为授权体验店", "addr": "上海市杨浦区闸殷路1555号国华广场A区", "phone": "13564468549", "lat": 31.331, "lng": 121.531}, {"name": "虹桥南丰城华为综合店", "addr": "上海市长宁区遵义路100号南丰城南区M层", "phone": "15021210920", "lat": 31.20906, "lng": 121.4034}, {"name": "长宁来福士华为授权体验店", "addr": "上海市长宁区长宁路1123号来福士广场01层03号", "phone": "15021566716", "lat": 31.221, "lng": 121.4145}, {"name": "天山路华为授权体验店", "addr": "上海市长宁区天山路762号", "phone": "13818458393", "lat": 31.2195, "lng": 121.399}, {"name": "高岛屋华为合作店", "addr": "上海市长宁区虹桥路1438号高岛屋百货1楼", "phone": "18017750033", "lat": 31.1965, "lng": 121.4025}, {"name": "金山华为合作店", "addr": "上海市金山区卫清西路477号1F-L1011", "phone": "18149788573", "lat": 30.7435, "lng": 121.3305}, {"name": "五月花广场华为合作店", "addr": "上海市静安区芷江西路488号五月花广场1F-132", "phone": "13162626219", "lat": 31.25909, "lng": 121.46154}, {"name": "晨阳路华为合作店", "addr": "上海市浦东新区祝桥镇晨阳路155号", "phone": "17316380426", "lat": 31.1094, "lng": 121.77753}, {"name": "祝桥华为合作店", "addr": "上海市浦东新区祝桥镇金亭公路543-545号", "phone": "17316380426", "lat": 31.1185, "lng": 121.726}, {"name": "东门大街华为合作店", "addr": "上海市浦东新区惠南镇东门大街56-58号", "phone": "15000496315", "lat": 31.03829, "lng": 121.71168}, {"name": "新场镇新环广场华为合作店", "addr": "上海市浦东新区新场镇新环西路989号新环广场1F", "phone": "15000898905", "lat": 31.02817, "lng": 121.64919}, {"name": "浦东新区惠南镇禹悦汇华为店", "addr": "上海市浦东新区沪南公路9916号禹州广场1层110室", "phone": "18321155561", "lat": 31.048, "lng": 121.75}, {"name": "明中广场华为授权体验店", "addr": "上海市松江区新桥镇明中路1885号明中广场1F-20", "phone": "18721010997", "lat": 31.073, "lng": 121.318}, {"name": "华为泗泾授权体验店", "addr": "上海市松江区泗泾镇泗宝路41号101-1", "phone": "17321231222", "lat": 31.1185, "lng": 121.271}, {"name": "梅家浜路御上海华为体验店", "addr": "上海市松江区梅家浜路1115号御上海MO街", "phone": "18702116005", "lat": 31.0505, "lng": 121.2455}, {"name": "临平路瑞虹坊华为合作店", "addr": "上海市虹口区临平路123号瑞虹坊3区L1-15", "phone": "18116174987", "lat": 31.26, "lng": 121.499}, {"name": "北外滩来福士华为授权体验店", "addr": "上海市虹口区东大名路999号B2-65", "phone": "15000499850", "lat": 31.25473, "lng": 121.50288}, {"name": "漕河泾M+华为合作店", "addr": "上海市徐汇区老沪闵路华发路漕河泾M+商业中心", "phone": "13460164197", "lat": 31.1175, "lng": 121.4365}];
+var HOURS = "10:00 - 22:00";
+var userPos = null;
+
+function haversine(lat1, lon1, lat2, lon2) {
+  var R = 6371, rad = Math.PI / 180;
+  var dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(lat1*rad)*Math.cos(lat2*rad) *
+          Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function fmtDist(km) {
+  return km < 1 ? Math.round(km*1000) + " m" : km.toFixed(1) + " km";
+}
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function render() {
+  var arr = STORES.slice();
+  if (userPos) {
+    arr.forEach(function(s){ s.d = haversine(userPos.lat, userPos.lng, s.lat, s.lng); });
+    arr.sort(function(a,b){ return a.d - b.d; });
+  }
+  var html = "";
+  arr.forEach(function(s){
+    html += '<div class="card"><div class="top"><h2>' + esc(s.name) + '</h2>'
+      + (userPos ? '<span class="dist">距您 ' + fmtDist(s.d) + '</span>' : '')
+      + '</div>'
+      + '<div class="row"><span class="ico">📍</span><span class="val">' + esc(s.addr) + '</span></div>'
+      + '<div class="row"><span class="ico">🕙</span><span class="val">营业时间 ' + HOURS + '</span></div>'
+      + '<div class="row"><span class="ico">📞</span><span class="val"><a class="phone" href="tel:' + s.phone + '">' + s.phone + '</a></span></div>'
+      + '<a class="call" href="tel:' + s.phone + '">拨打电话</a>'
+      + '</div>';
+  });
+  document.getElementById("list").innerHTML = html;
+}
+
+function locate() {
+  var st = document.getElementById("status");
+  if (!navigator.geolocation) { st.textContent = "当前浏览器不支持定位，已按默认顺序展示"; return; }
+  st.textContent = "正在获取您的位置…";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    st.textContent = "已按距离您最近排序";
+    render();
+  }, function(){
+    st.textContent = "定位未授权，已按默认顺序展示";
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+}
+
+document.getElementById("relocate").addEventListener("click", locate);
+render();
+locate();
+</script>
+</body>
+</html>
